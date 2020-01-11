@@ -6,6 +6,61 @@ import strikt.assertions.isEqualTo
 
 class Day1Test {
 
+    private val day1 = Day1()
+
+    @Test
+    fun calculateFuel_example1() {
+        expectThat(day1.calculateFuel(12)) isEqualTo 2
+    }
+
+    @Test
+    fun calculateFuel_example2() {
+        expectThat(day1.calculateFuel(14)) isEqualTo 2
+    }
+
+    @Test
+    fun calculateFuel_example3() {
+        expectThat(day1.calculateFuel(1969)) isEqualTo 654
+    }
+
+    @Test
+    fun calculateFuel_example4() {
+        expectThat(day1.calculateFuel(100756)) isEqualTo 33583
+    }
+
+    @Test
+    fun solution_part1() {
+        expectThat(
+            MASS_ALL_MODULES
+                .map { day1.calculateFuel(it) }
+                .reduce { acc, i -> acc + i }
+        ) isEqualTo 3502510
+    }
+
+    @Test
+    fun calculateAdditionalFuel_example1() {
+        expectThat(day1.calculateAdditionalFuel(14)) isEqualTo 2
+    }
+
+    @Test
+    fun calculateAdditionalFuel_example2() {
+        expectThat(day1.calculateAdditionalFuel(1969)) isEqualTo 966
+    }
+
+    @Test
+    fun calculateAdditionalFuel_example3() {
+        expectThat(day1.calculateAdditionalFuel(100756)) isEqualTo 50346
+    }
+
+    @Test
+    fun solution_part2() {
+        expectThat(
+            MASS_ALL_MODULES
+                .map { day1.calculateAdditionalFuel(it) }
+                .reduce { acc, i -> acc + i }
+        ) isEqualTo 5250885
+    }
+
     companion object {
         private val MASS_ALL_MODULES = listOf(
             80228,
@@ -108,61 +163,6 @@ class Day1Test {
             130193,
             109013,
             120465
-        )
-    }
-
-    private val day1 = Day1()
-
-    @Test
-    fun calculateFuel_example1() {
-        expectThat(2).isEqualTo(day1.calculateFuel(12))
-    }
-
-    @Test
-    fun calculateFuel_example2() {
-        expectThat(2).isEqualTo(day1.calculateFuel(14))
-    }
-
-    @Test
-    fun calculateFuel_example3() {
-        expectThat(654).isEqualTo(day1.calculateFuel(1969))
-    }
-
-    @Test
-    fun calculateFuel_example4() {
-        expectThat(33583).isEqualTo(day1.calculateFuel(100756))
-    }
-
-    @Test
-    fun solution_part1() {
-        expectThat(3502510).isEqualTo(
-            MASS_ALL_MODULES
-                .map { day1.calculateFuel(it) }
-                .reduce { acc, i -> acc + i }
-        )
-    }
-
-    @Test
-    fun calculateAdditionalFuel_example1() {
-        expectThat(2).isEqualTo(day1.calculateAdditionalFuel(14))
-    }
-
-    @Test
-    fun calculateAdditionalFuel_example2() {
-        expectThat(966).isEqualTo(day1.calculateAdditionalFuel(1969))
-    }
-
-    @Test
-    fun calculateAdditionalFuel_example3() {
-        expectThat(50346).isEqualTo(day1.calculateAdditionalFuel(100756))
-    }
-
-    @Test
-    fun solution_part2() {
-        expectThat(5250885).isEqualTo(
-            MASS_ALL_MODULES
-                .map { day1.calculateAdditionalFuel(it) }
-                .reduce { acc, i -> acc + i }
         )
     }
 }
