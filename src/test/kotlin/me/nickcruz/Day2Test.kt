@@ -57,14 +57,49 @@ class Day2Test {
 
     @Test
     fun solution_part1() {
-        expectThat(day2.run(PUZZLE_INPUT)[0]) isEqualTo 2692315
+        expectThat(day2.run(createProgram(12, 2))[0]) isEqualTo 2692315
     }
+
+    /**
+     * Brute force approach by running every puzzle input for every possible noun/verb combination from 0-99.
+     */
+    @Test
+    fun solution_part2() {
+        var noun = 0
+        var verb = 0
+        var result = 0
+        val goal = 19690720
+        var solution = 0
+        while (result != goal && noun <= 99) {
+            while (result != goal && verb <= 99) {
+                result = day2.run(createProgram(noun, verb))[0]
+                if (result == goal) {
+                    println("Found result. Noun: $noun, Verb: $verb")
+                    solution = 100 * noun + verb
+                    continue
+                }
+                verb++
+            }
+            noun++
+            verb = 0
+        }
+
+        expectThat(solution) isEqualTo 9507
+    }
+
+    private fun createProgram(noun: Int, verb: Int) = PUZZLE_INPUT
+        .toMutableList()
+        .apply {
+            this[1] = noun
+            this[2] = verb
+        }
+        .toList()
 
     companion object {
         private val PUZZLE_INPUT = listOf(
             1,
-            12, // position 1 (0), replaced with 12
-            2, // position 2 (0), replaced with 2
+            0,
+            0,
             3,
             1,
             1,
