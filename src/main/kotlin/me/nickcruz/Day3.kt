@@ -134,7 +134,6 @@ class Day3 {
             class Wire1(val distance: Int) : Wire()
 
             class Cross(wire1: Wire1, distance: Int) : Wire() {
-
                 val combinedDistance = wire1.distance + distance
             }
         }
@@ -229,16 +228,15 @@ class Day3 {
                     'U' -> currentY += magnitude
                 }
 
-                val fromX = min(prevX, currentX)
+                val isHorizontal = direction == 'L' || direction == 'R'
+                val fromX = min(prevX, currentX) + if (isHorizontal) 1 else 0
                 val toX = max(prevX, currentX)
-                val fromY = min(prevY, currentY)
+                val fromY = min(prevY, currentY)  + if (!isHorizontal) 1 else 0
                 val toY = max(prevY, currentY)
 
-                distance-- // double-counts current node
                 for (x in fromX..toX) {
                     for (y in fromY..toY) {
-                        distance++
-                        circuit[x][y] = onWireDrawn(x, y, circuit[x][y], distance)
+                        circuit[x][y] = onWireDrawn(x, y, circuit[x][y], ++distance)
                     }
                 }
             }
