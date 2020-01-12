@@ -9,27 +9,27 @@ class Day3Test {
     private val day3 = Day3()
 
     @Test
-    fun example1() {
+    fun findManhattanDistance_example1() {
         val schema1 = "R8,U5,L5,D3"
         val schema2 = "U7,R6,D4,L4"
 
-        expectThat(day3.run(schema1, schema2)) isEqualTo 6
+        expectThat(day3.runPart1(schema1, schema2)) isEqualTo 6
     }
 
     @Test
-    fun example2() {
+    fun findManhattanDistance_example2() {
         val schema1 = "R75,D30,R83,U83,L12,D49,R71,U7,L72"
         val schema2 = "U62,R66,U55,R34,D71,R55,D58,R83"
 
-        expectThat(day3.run(schema1, schema2)) isEqualTo 159
+        expectThat(day3.runPart1(schema1, schema2)) isEqualTo 159
     }
 
     @Test
-    fun example3() {
+    fun findManhattanDistance_example3() {
         val schema1 = "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
         val schema2 = "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"
 
-        expectThat(day3.run(schema1, schema2)) isEqualTo 135
+        expectThat(day3.runPart1(schema1, schema2)) isEqualTo 135
     }
 
     @Test
@@ -37,7 +37,15 @@ class Day3Test {
         val schema1 = PUZZLE_INPUT_SCHEMA_1
         val schema2 = PUZZLE_INPUT_SCHEMA_2
 
-        expectThat(day3.run(schema1, schema2)) isEqualTo 731
+        expectThat(day3.runPart1(schema1, schema2)) isEqualTo 731
+    }
+
+    @Test
+    fun findMinimumWireDistance_example1() {
+        val schema1 = "R8,U5,L5,D3"
+        val schema2 = "U7,R6,D4,L4"
+
+        expectThat(day3.runPart2(schema1, schema2)) isEqualTo 30
     }
 
     companion object {

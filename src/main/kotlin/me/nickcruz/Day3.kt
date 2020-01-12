@@ -92,8 +92,13 @@ import kotlin.math.min
  */
 class Day3 {
 
-    fun run(schema1: String, schema2: String) = FuelManagementSystem().findManhattanDistance(schema1, schema2)
+    fun runPart1(schema1: String, schema2: String) =
+        FuelManagementSystem().findManhattanDistance(schema1, schema2)
 
+    fun runPart2(schema1: String, schema2: String) =
+        FuelManagementSystem().findMinimumWireDistance(schema1, schema2)
+
+    // TODO(nick): Absorb this class into the Day3 class.
     class FuelManagementSystem {
 
         companion object {
@@ -103,11 +108,11 @@ class Day3 {
         }
 
         private val circuit = MutableList(MAX_WIRE_LENGTH) {
-            MutableList(MAX_WIRE_LENGTH) {
-                Wire.EMPTY
+            MutableList<Wire>(MAX_WIRE_LENGTH) {
+                Wire.Empty
             }
         }.apply {
-            this[CENTRAL_PORT_X][CENTRAL_PORT_Y] = Wire.CENTRAL_PORT
+            this[CENTRAL_PORT_X][CENTRAL_PORT_Y] = Wire.CentralPort
         }
 
         /**
@@ -121,27 +126,31 @@ class Day3 {
          * CROSS is any WIRE1's that we run into while "drawing" wire 2. For this reason, we don't need WIRE2, as we are
          * only looking for CROSSes. (In fact, we may not even need this one.)
          */
-        enum class Wire {
-            CENTRAL_PORT,
-            EMPTY,
-            WIRE1,
-            CROSS
+        sealed class Wire {
+            object CentralPort : Wire()
+
+            object Empty : Wire()
+
+            class Wire1(val distance: Int) : Wire()
+
+            class Cross(wire1: Wire1, distance: Int) : Wire() {
+
+                val combinedDistance = wire1.distance + distance
+            }
         }
 
         /**
-         * Creates a 2D [MutableList] of [Int]s. Each value represents how that wire is.
-         *
-         * This function will "draw" the wires based on the string counted. This way, while wire 2 is getting drawn, we can
-         * see where the wires cross.
+         * This function will "draw" the wires based on the schema strings. This way, while wire 2 is getting drawn, we
+         * can see where the wires cross.
          *
          * Complexity will be O(DI) where D is the distance marked by each instruction and I is the total number of
          * instructions.
          */
         fun findManhattanDistance(schema1: String, schema2: String): Int {
             // Draw wire 1 based on schema1
-            drawWire(schema1) { _, _, wire ->
+            drawWire(schema1) { _, _, wire, distance ->
                 when (wire) {
-                    Wire.EMPTY -> Wire.WIRE1
+                    Wire.Empty -> Wire.Wire1(distance)
                     else -> wire
                 }
             }
@@ -149,16 +158,46 @@ class Day3 {
             var minimumManhattanDistance = Int.MAX_VALUE
 
             // Draw wire 2 based on schema2
-            drawWire(schema2) { x, y, wire ->
+            drawWire(schema2) { x, y, wire, distance ->
                 when (wire) {
-                    Wire.WIRE1 -> {
+                    is Wire.Wire1 -> {
                         minimumManhattanDistance = minOf(minimumManhattanDistance, findManhattanDistance(x, y))
-                        Wire.CROSS
+                        Wire.Cross(wire, distance)
                     }
                     else -> wire
                 }
             }
             return minimumManhattanDistance
+        }
+
+        /**
+         * This function will "draw" the wires based on the schema strings. This way, while wire 2 is getting drawn, we
+         * can see where the wires cross.
+         *
+         * It will also keep track of the distance we've already gone in drawing each wire. Since we want a minimum
+         * distance, we're going to find the value of the distance of *every* [Wire.Cross] and rank them.
+         */
+        fun findMinimumWireDistance(schema1: String, schema2: String): Int {
+            drawWire(schema1) { _, _, wire, distance ->
+                when (wire) {
+                    Wire.Empty -> Wire.Wire1(distance)
+                    else -> wire
+                }
+            }
+
+            val crosses = mutableListOf<Wire.Cross>()
+            drawWire(schema2) { _, _, wire, distance ->
+                when (wire) {
+                    is Wire.Wire1 -> {
+                        val cross = Wire.Cross(wire, distance)
+                        crosses.add(cross)
+                        cross
+                    }
+                    else -> wire
+                }
+            }
+            crosses.sortBy(Wire.Cross::combinedDistance)
+            return crosses[0].combinedDistance
         }
 
         private fun findManhattanDistance(x: Int, y: Int) =
@@ -170,10 +209,11 @@ class Day3 {
          * @param schema The wire to draw. Draws it one wire at a time.
          * @param onWireDrawn Callback for when each point in the circuit is hit.
          */
-        private fun drawWire(schema: String, onWireDrawn: (x: Int, y: Int, Wire) -> Wire) {
+        private fun drawWire(schema: String, onWireDrawn: (x: Int, y: Int, Wire, distance: Int) -> Wire) {
             // Start at central port
             var currentX = CENTRAL_PORT_X
             var currentY = CENTRAL_PORT_Y
+            var distance = 0
 
             // Draw wire based on schema, delimited by ','
             for (vector in schema.split(',')) {
@@ -194,9 +234,11 @@ class Day3 {
                 val fromY = min(prevY, currentY)
                 val toY = max(prevY, currentY)
 
+                distance-- // double-counts current node
                 for (x in fromX..toX) {
                     for (y in fromY..toY) {
-                        circuit[x][y] = onWireDrawn(x, y, circuit[x][y])
+                        distance++
+                        circuit[x][y] = onWireDrawn(x, y, circuit[x][y], distance)
                     }
                 }
             }
