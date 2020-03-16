@@ -108,8 +108,9 @@ import me.nickcruz.intcode.IntCodeComputer
  */
 class Day2 {
 
-    private val intCodeComputer = IntCodeComputer()
-
-    fun run(program: List<Int>) = intCodeComputer.run(program)
+    fun run(program: List<Int>) = IntCodeComputer(program).run {
+        run()
+        this.program
+    }
 
 }
