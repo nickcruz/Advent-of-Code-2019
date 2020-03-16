@@ -45,4 +45,22 @@ class IntCodeComputerTest {
 
         expectThat(results) isEqualTo listOf(TEST_VALUE)
     }
+
+    @Test
+    fun opcode_day5_example_immediate() {
+        val computer = IntCodeComputer(listOf(1002, 4, 3, 4, 33))
+
+        computer.run()
+
+        expectThat(computer.program) isEqualTo listOf(1002, 4, 3, 4, 99)
+    }
+
+    @Test
+    fun opcode_day5_example_add_immediate() {
+        val computer = IntCodeComputer(listOf(1101, 100, -1, 4, 0))
+
+        computer.run()
+
+        expectThat(computer.program) isEqualTo listOf(1101, 100, -1, 4, 99)
+    }
 }

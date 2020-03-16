@@ -37,20 +37,18 @@ class IntCodeComputer(startingProgram: List<Int>) {
      * @return A list of [Int]s that were printed by any [OPCODE_PRINT] instructions.
      */
     fun run(inputs: List<Int> = emptyList()): List<Int> {
-
-        // TODO(nick): Implement immediate mode, since everything is parameter mode right now
-
         remainingInputs.clear()
         remainingInputs.addAll(inputs)
         var i = 0
         while (i < runningProgram.size) {
-            i = when (runningProgram[i]) {
-                OPCODE_ADD -> add(i)
-                OPCODE_MULTIPLY -> multiply(i)
+            val instruction = runningProgram[i]
+            i = when (instruction.opcode()) {
+                OPCODE_ADD -> add(instruction, i)
+                OPCODE_MULTIPLY -> multiply(instruction, i)
                 OPCODE_TERMINATE -> terminate()
-                OPCODE_STORE -> store(i)
+                OPCODE_STORE -> storeInput(i)
                 OPCODE_PRINT -> print(i)
-                else -> throw IllegalStateException("Unknown opcode: $i")
+                else -> throw IllegalStateException("Unknown opcode: $instruction")
             }
         }
         return outputs
@@ -59,27 +57,29 @@ class IntCodeComputer(startingProgram: List<Int>) {
     /**
      * Adds the values at the next two positions and puts it in the positions specified by the 3rd position.
      *
+     * @param instruction The full instruction value received at [currentIndex].
      * @param currentIndex The index of the [OPCODE_ADD] that was seen.
      * @return The new index to continue running the program on. Will be currentIndex + 4.
      */
-    private fun add(currentIndex: Int) = runBiConsumerOpcode(currentIndex) { a, b ->
+    private fun add(instruction: Int, currentIndex: Int) = runBiConsumerOpcode(instruction, currentIndex) { a, b ->
         a + b
     }
 
     /**
      * Multiples the values at the next two positions and puts it in the positions specified by the 3rd position.
      *
+     * @param instruction The full instruction value received at [currentIndex].
      * @param currentIndex The index of the [OPCODE_ADD] that was seen.
      * @return The new index to continue running the program on. Will be currentIndex + 4.
      */
-    private fun multiply(currentIndex: Int) = runBiConsumerOpcode(currentIndex) { a, b ->
+    private fun multiply(instruction: Int, currentIndex: Int) = runBiConsumerOpcode(instruction, currentIndex) { a, b ->
         a * b
     }
 
     /**
      * Stores the value received from a prepared input and puts it in the position specified by the next position.
      */
-    private fun store(currentIndex: Int): Int {
+    private fun storeInput(currentIndex: Int): Int {
         var i = currentIndex
         val input = remainingInputs.poll() ?: 0
         runningProgram[runningProgram[++i]] = input
@@ -95,13 +95,41 @@ class IntCodeComputer(startingProgram: List<Int>) {
         return ++i
     }
 
-    private fun runBiConsumerOpcode(currentIndex: Int, operation: (Int, Int) -> Int): Int {
+    private fun runBiConsumerOpcode(
+        instruction: Int,
+        currentIndex: Int,
+        operation: (Int, Int) -> Int
+    ): Int {
         var i = currentIndex
-        val result = operation(runningProgram[runningProgram[++i]], runningProgram[runningProgram[++i]])
-        runningProgram[runningProgram[++i]] = result
+        val arg1 = retrieveValue(instruction.isArg1Immediate(), ++i)
+        val arg2 = retrieveValue(instruction.isArg2Immediate(), ++i)
+        val result = operation(arg1, arg2)
+        storeResult(instruction.isArg3Immediate(), ++i, result)
         return ++i
     }
 
+    private fun retrieveValue(isImmediateMode: Boolean, index: Int): Int = if (isImmediateMode) {
+        runningProgram[index]
+    } else {
+        runningProgram[runningProgram[index]]
+    }
+
+    private fun storeResult(isImmediateMode: Boolean, index: Int, value: Int) {
+        if (isImmediateMode) {
+            runningProgram[index] = value
+        } else {
+            runningProgram[runningProgram[index]] = value
+        }
+    }
+
     private fun terminate() = Int.MAX_VALUE
+
+    private fun Int.opcode() = this % 100
+
+    private fun Int.isArg1Immediate() = (this % 1000) / 100 == 1
+
+    private fun Int.isArg2Immediate() = (this % 10000) / 1000 == 1
+
+    private fun Int.isArg3Immediate() = (this % 100000) / 10000 == 1
 
 }
