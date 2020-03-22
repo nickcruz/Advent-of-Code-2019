@@ -11,6 +11,10 @@ class IntCodeComputer(startingProgram: List<Int>) {
         private const val OPCODE_MULTIPLY = 2
         private const val OPCODE_STORE = 3
         private const val OPCODE_PRINT = 4
+        private const val OPCODE_JUMP_IF_TRUE = 5
+        private const val OPCODE_JUMP_IF_FALSE = 6
+        private const val OPCODE_LESS_THAN = 7
+        private const val OPCODE_EQUALS = 8
         private const val OPCODE_TERMINATE = 99
     }
 
@@ -40,15 +44,24 @@ class IntCodeComputer(startingProgram: List<Int>) {
         remainingInputs.clear()
         remainingInputs.addAll(inputs)
         var i = 0
-        while (i < runningProgram.size) {
+        loop@ while (true) {
             val instruction = runningProgram[i]
             i = when (instruction.opcode()) {
                 OPCODE_ADD -> add(instruction, i)
                 OPCODE_MULTIPLY -> multiply(instruction, i)
-                OPCODE_TERMINATE -> terminate()
+                OPCODE_TERMINATE -> {
+                    break@loop
+                }
                 OPCODE_STORE -> storeInput(i)
                 OPCODE_PRINT -> print(i)
+                OPCODE_JUMP_IF_TRUE -> jump(instruction, i, true)
+                OPCODE_JUMP_IF_FALSE -> jump(instruction, i, false)
+                OPCODE_LESS_THAN -> lessThan(instruction, i)
+                OPCODE_EQUALS -> equals(instruction, i)
                 else -> throw IllegalStateException("Unknown opcode: $instruction")
+            }
+            if (i > runningProgram.size) {
+                throw IllegalStateException("Instruction pointer past end of program. i: $i, size: ${runningProgram.size}")
             }
         }
         return outputs
@@ -95,6 +108,41 @@ class IntCodeComputer(startingProgram: List<Int>) {
         return ++i
     }
 
+    /**
+     * Checks if the first parameter is non-zero, then sets the instruction pointer to the value from the second
+     * parameter. Otherwise, it does nothing.
+     *
+     * @param jumpIfTrue Jumps if the first param is non-zero. Otherwise, jumps if zero.
+     */
+    private fun jump(instruction: Int, currentIndex: Int, jumpIfTrue: Boolean): Int {
+        var i = currentIndex
+        val arg1 = retrieveValue(instruction.isArg1Immediate(), ++i)
+
+        val isArg1NonZero = arg1 != 0
+        ++i
+        return if ((isArg1NonZero && jumpIfTrue) || (!isArg1NonZero && !jumpIfTrue)) {
+            retrieveValue(instruction.isArg2Immediate(), i)
+        } else {
+            i
+        }
+    }
+
+    /**
+     * If the first parameter is less than the second parameter, it stores 1 in the position given by the third
+     * parameter. Otherwise, it stores 0.
+     */
+    private fun lessThan(instruction: Int, currentIndex: Int) = runBiConsumerOpcode(instruction, currentIndex) { a, b ->
+        if (a < b) 1 else 0
+    }
+
+    /**
+     * If the first parameter is equal to the second parameter, it stores 1 in the position given by the third
+     * parameter. Otherwise, it stores 0.
+     */
+    private fun equals(instruction: Int, currentIndex: Int) = runBiConsumerOpcode(instruction, currentIndex) { a, b ->
+        if (a == b) 1 else 0
+    }
+
     private fun runBiConsumerOpcode(
         instruction: Int,
         currentIndex: Int,
@@ -121,8 +169,6 @@ class IntCodeComputer(startingProgram: List<Int>) {
             runningProgram[runningProgram[index]] = value
         }
     }
-
-    private fun terminate() = Int.MAX_VALUE
 
     private fun Int.opcode() = this % 100
 
