@@ -12,7 +12,7 @@ There are 25 days/problems with 2 parts each. I get 1 star per part that I solve
  3 **
  4 **
  5 *
- 6
+ 6 *
  7
  8
  9
